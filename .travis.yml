@@ -1,0 +1,40 @@
+dist: xenial
+language: cpp
+
+addons:
+    apt:
+        packages:
+            # stechec2 dependencies
+            - build-essential python3-yaml ruby
+            - libzmq3-dev libzmqpp-dev libgtest-dev libgflags-dev gcovr
+
+matrix:
+    include:
+        - name: GCC build
+          compiler: gcc
+
+        - name: Clang build
+          compiler: clang
+
+        - name: Coverage build
+          env: CONFFLAGS="--enable-gcov"
+          compiler: gcc
+
+        - name: ASAN build
+          env: CONFFLAGS="--enable-asan"
+          compiler: clang
+
+        - name: MSAN build
+          env: CONFFLAGS="--enable-msan"
+          compiler: clang
+
+install:
+    # Setup stechec2 with prologin2017
+    - git clone https://github.com/prologin/stechec2
+    - cd stechec2
+    - git clone https://github.com/prologin/prologin2017 games/prologin2017
+    - ./waf.py configure --with-games=prologin2017 $CONFFLAGS || cat ./build/config.log
+
+script:
+    - ./waf.py build --check
+    - ./waf.py coverage
